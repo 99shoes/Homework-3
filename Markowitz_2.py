@@ -50,12 +50,13 @@ class MyPortfolio:
     NOTE: You can modify the initialization function
     """
 
-    def __init__(self, price, exclude, lookback=50, gamma=0):
+    def __init__(self, price, exclude, lookback=50, momentum_period=20, min_assets=3):
         self.price = price
         self.returns = price.pct_change().fillna(0)
         self.exclude = exclude
         self.lookback = lookback
-        self.gamma = gamma
+        self.momentum_period = momentum_period
+        self.min_assets = min_assets
 
     def calculate_weights(self):
         # Get the assets by excluding the specified column
