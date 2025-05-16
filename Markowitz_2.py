@@ -69,7 +69,37 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
+ # Initialize early dates with zero weights
+        self.portfolio_weights.iloc[:max(self.lookback, self.momentum_period)] = 0.0
 
+        # Calculate rolling momentum and volatility
+        rolling_returns = self.returns[assets].rolling(window=self.momentum_period).mean()
+        rolling_vol = self.returns[assets].rolling(window=self.lookback).std()
+
+        # Calculate weights for each date after lookback and momentum period
+        for date in self.price.index[max(self.lookback, self.momentum_period):]:
+            # Get momentum and volatilities for the current date
+            momentum = rolling_returns.loc[date, assets]
+            volatilities = rolling_vol.loc[date, assets]
+
+            # Skip if any data is missing
+            if momentum.isna().any() or volatilities.isna().any() or (volatilities == 0).any():
+                self.portfolio_weights.loc[date, :] = 0.0
+                continue
+
+            # Select assets with positive momentum
+            selected_assets = momentum[momentum > 0].index
+            if len(selected_assets) < self.min_assets:
+                selected_assets = momentum.nlargest(self.min_assets).index
+
+            # Calculate risk parity weights for selected assets
+            inv_vol = 1.0 / volatilities[selected_assets]
+            weights = (inv_vol / inv_vol.sum()).round(6)
+
+            # Assign weights
+            self.portfolio_weights.loc[date, assets] = 0.0
+            self.portfolio_weights.loc[date, selected_assets] = weights
+            self.portfolio_weights.loc[date, self.exclude] = 0.
         """
         TODO: Complete Task 4 Above
         """
